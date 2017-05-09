@@ -4,6 +4,8 @@ import './App.css';
 import Joyride from 'react-joyride';
 import './react-joyride-compiled.css'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import Modal from 'react-modal';
+// import {ButtonToolbar, Button} from 'react-bootstrap'
 
 class App extends Component {
 
@@ -11,6 +13,32 @@ class App extends Component {
     super(props);
     this.handleSelect = this.handleSelect.bind(this);
     this.resetTour = this.resetTour.bind(this);
+    this.state = {
+      modalIsOpen: true,
+      run: false,
+      showModal: true,
+    };
+
+    this.openModal = this.openModal.bind(this);
+    this.afterOpenModal = this.afterOpenModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    this.yes = this.yes.bind(this);
+    this.never = this.never.bind(this);
+    this.close = this.close.bind(this);
+    this.handleJoyrideCallback = this.handleJoyrideCallback.bind(this);
+  } 
+
+  openModal() {
+    this.setState({modalIsOpen: true});
+  }
+
+  afterOpenModal() {
+    // references are now sync'd and can be accessed.
+    this.refs.subtitle.style.color = '#f00';
+  }
+
+  closeModal() {
+    this.setState({modalIsOpen: false});
   }
 
   handleSelect(index, last) {
@@ -21,10 +49,41 @@ class App extends Component {
     }
   }
 
+  handleJoyrideCallback(result) {
+    const{joyride} = this.props;
+
+    if (result.action == 'close') {
+      this.setState({run: false});
+    }
+
+  }
+
   resetTour() {
     console.dir(this);
     this.joyride.reset(true);
-    this.callback();
+    this.setState({run: true});
+  }
+
+  // const buttonsInstance = (
+  //   <ButtonToolbar>
+  //     <Button href="#">Link</Button>
+  //     <Button>Button</Button>
+  //   </ButtonToolbar>// );
+
+  /* Modal funcs */
+  // Yes! start tour
+  yes() {
+    this.closeModal();
+    this.setState({run: true});
+  }
+
+  never() {
+    this.closeModal();
+    this.close();
+  }
+
+  close(){
+    this.setState({ showModal: false });
   }
 
   render() {
@@ -35,7 +94,7 @@ class App extends Component {
           ref={c => (this.joyride = c)}
           steps={[
             {
-              title: 'First Step',
+              title: 'Start',
               text: 'Prototype!',
               selector: '.App-intro',
             },
@@ -58,26 +117,28 @@ class App extends Component {
               selector: '.itemtwo',
             }
             ]}
-          run={true} // or some other boolean for when you want to start it
+          run={this.state.run} // or some other boolean for when you want to start it
           type={"continuous"}
           showOverlay={true}
           allowClicksThruHole={true}
-          autoStart={true}
+          autoStart={this.state.run}
           disableOverlay={true}
           showSkipButton={true}
-          callback={type:'step:Item One', index:1}
+          callback={this.handleJoyrideCallback}
         />
+
         <div className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <h2>Welcome to React</h2>
         </div>
+
         <p className="App-intro">
           To get started, edit <code>src/App.js</code> and save to reload.
         </p>
 
         <Tabs onSelect={this.handleSelect}>
           <TabList>
-            <Tab>One</Tab>
+            <Tab onChange={this.resetTour} >One</Tab>
             <Tab className="tabtwo">Two</Tab>
           </TabList>
           <TabPanel>
@@ -89,6 +150,24 @@ class App extends Component {
         </Tabs>
 
         <button type="button" onClick={this.resetTour}>Reset Tour</button>
+
+        <Modal
+          className="modal"
+          overlayClassName ="modal-overlay"
+          isOpen={this.state.modalIsOpen}
+          onAfterOpen={this.afterOpenModal}
+          onRequestClose={this.closeModal}
+          contentLabel="prototype Modal"
+          show={this.state.showModal} 
+          onHide={this.close}
+        >
+
+          <h2 className="modal-title">Welcome!</h2>
+          <div className="modal-content">Would you like to start the walkthrough tutorial?</div>
+          <button onClick={this.yes} className="modal-button">Yes!</button>
+          <button onClick={this.closeModal}>Later</button>
+          <button onClick={this.never}>never again...</button>
+        </Modal>
       </div>
     );
   }
